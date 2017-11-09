@@ -43,7 +43,7 @@ location_wind = weather.get_wind() #{u'speed': 2.46, u'deg': 82.5049}
 location_wind_speed = str(location_wind['speed'])+ " mph"
 location_wind_direction = str(location_wind['deg']) + " degrees"
 
-# Temperature in Fahrenheit
+# Temperature in Fahrenheit : min, max and current
 location_temperature_farenheit = weather.get_temperature('fahrenheit')
 
 location_min_temp = location_temperature_farenheit['temp_min']
@@ -57,15 +57,21 @@ location_current_weather_status = weather.get_detailed_status()
 location_humidity_percentage = str(weather.get_humidity())+"%"  
 
 
+# Table for optimal swimming values
+optimal_swimming_temp_values = {'max_temp':84,'min_temp':74}
 
 
 
 
 
+# canISwimToday(optimal_swimming_temp_values,location_current_temp,location_current_weather_status)
+# canIHaveAPoolParty(forcasted_weather_conditions and calendar api intergration)
+# shouldPoolBeClosedToday(forecast weather condtions for the day)
 
 
+# def canISwimToday(self,optimal_swimming_temp_values,location_current_weather_status):
 
+#  Write function to compare current weather conditions with optimal weather conditions and
+# and then decide whether or not to give suggestion to swim.
 
-
-
-
+#.....
