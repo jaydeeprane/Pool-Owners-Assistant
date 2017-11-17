@@ -1,0 +1,48 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset = "utf-8">
+    <meta charset = "utf-8">
+    <link href="https://d3-geomap.github.io//d3-geomap/topojson/world/countries/USA.json">
+   <link href="https://d3-geomap.github.io//d3-geomap/css/d3.geomap.css" rel="stylesheet">
+    <script src="https://d3-geomap.github.io//d3-geomap/vendor/d3.geomap.dependencies.min.js"></script>
+    <script src="https://d3-geomap.github.io//d3-geomap/js/d3.geomap.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="http://d3js.org/topojson.v2.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <title>Pool Owner's Assistant</title>
+</head>
+<body>
+<div>
+  <button id="displayresume" type="submit" class="btn btn-info"
+          onclick="display()">Search</button>
+    </div>
+
+</body>
+
+<script>
+    function display() {
+        $.ajax({
+            type: "GET",
+            url: '/pool/index',
+            data: {},
+            success: function (msg) {
+                temp = JSON.parse(msg.qw_1),
+                    reply=JSON.parse(msg.reply),
+                    //alert(temp);
+                    printCards(temp)
+                    printCards(reply)
+                // $('#try1').show();
+
+            }
+        });
+    return false;
+    }
+</script>
+</html>
