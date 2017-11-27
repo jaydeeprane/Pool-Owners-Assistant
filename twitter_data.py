@@ -8,7 +8,7 @@ from collections import Counter
 from tweepy import OAuthHandler, Stream
 import urllib2
 import json
-
+import csv
 
 
 # Automatically geolocate the connecting IP
@@ -25,31 +25,82 @@ location = json.loads(json_string)
 # u'time_zone': u'America/New_York', u'longitude': -78.7239, u'metro_code': 560, u'latitude': 35.7463, u'country_code': u'US', 
 # u'country_name': u'United States', u'zip_code': u'27606'}
 
-location_longitude = location['longitude']
-location_latitude = location['latitude']
+# location_longitude = location['longitude']
+# location_latitude = location['latitude']
 
 
-consumer_key = 'X8JfHtFAy47DD1cYWBbtCawZm'
-consumer_secret = 'LgA9cIhl6apmcs0XieqUkAk4uYOzSaNoqFxDli1edo9jC56zRS'
-access_token = '578485087-7RLurdjG7Kx4BpsTJZ1hCAgewvKxZQipuolGaxJq'
-access_secret = 'SvW0LmgIqesjMiQwFkca6ds2XR3gKnn1G1pHjM6HFpfKJ'
+
+# Uncomment this and refer to access_tokens file for these tokens
+# consumer_key = 
+# consumer_secret = 
+# access_token = 
+# access_secret = 
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
  
+api = tweepy.API(auth)
+
+# Open/Create a file to append data
+csvFile = open('tweets1.csv', 'a')
+# Use csv Writer
+csvWriter = csv.writer(csvFile)
+s = set()
+
+
+
+
+for tweet in tweepy.Cursor(api.search, 
+                    q=('swimming pool OR swimming pool party OR swimming pool tips OR swimming fun'), 
+                    Since="2016-08-09", 
+                    until="2014-02-15", 
+                    lang="en",tweet_mode='extended').items():
+
+	t = re.sub(r"http\S+", "", tweet.full_text.encode('utf-8'))
+	if (not tweet.retweeted) and ('RT @' not in t) and t not in s:
+		print t
+		print '\n'
+		s.add(t)
+		csvWriter.writerow(t)
+
+csvFile.close()
+
+
+# Approach 2
+# results = api.search(q=('swimming pool OR swimming pool party OR swimming pool tips OR swimming fun'),lang="en", tweet_mode='extended')
+
+# for tweet in results:
+# 	t = re.sub(r"http\S+", "", tweet.full_text.encode('utf-8'))
+# 	if (not tweet.retweeted) and ('RT @' not in t) and t not in s:
+# 		print t
+# 		print '\n'
+# 		s.add(t)
+
+
+
+
+# Approach 3
+
 # geocode=str(location_latitude)+","+str(location_longitude)+",10000mi"
 
-class MyStreamListener(tweepy.StreamListener):
-    def on_status(self, status):
-        print(status.text)
+# class MyStreamListener(tweepy.StreamListener):
+#     def on_status(self, status):
+#     	t = re.sub(r"http\S+", "", status.full_text.encode('utf-8'))
+
+#     	if (not tweet.retweeted) and ('RT @' not in t) and t not in s:
+# 			print t
+# 			print '\n'
+# 			s.add(t)
+
+# 		# print(status.text)
 
 
-# api = tweepy.API(auth,wait_on_rate_limit=True)
-l = MyStreamListener()
-stream = tweepy.Stream(auth, l)
+# # api = tweepy.API(auth,wait_on_rate_limit=True)
+# l = MyStreamListener()
+# stream = tweepy.Stream(auth, l)
 
 
-stream.filter(track=['swimming pool','pool party'])
+# stream.filter(track=['swimming pool','pool party'],tweet_mode='extended')
 
 
   
