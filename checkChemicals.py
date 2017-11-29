@@ -33,6 +33,11 @@ optimalValuesMax = constants.optimalValuesMax
 
 chemicalDict = {CYA: CyanuricAcid, CH: CalciumHardness, TA: TotalAlkalinity, FC: FreeChlorine, Borate: Borates}
 
+cost = 0
+
+def update_cost(oz,dollar):
+    global cost
+    cost = cost + oz*dollar
 
 def inRange(val, min, max):
     if val > max or val < min:
@@ -52,8 +57,10 @@ def val_cal(amountChemical, changeReq, changeVal):
 
 
 def calc(listOfChem, change):
+    global cost
     s = val_cal(listOfChem[3], change, listOfChem[2])
-    print('Need to add ', s, 'oz of ', listOfChem[0])
+    update_cost(s,listOfChem[1])
+    return 'Need to add ' + str(s) + 'oz of ' + listOfChem[0]
 
 def get_min_fc(cyaLevel):
     return (optimalValuesMin[FC] / 100) * cyaLevel
@@ -78,21 +85,22 @@ def higher_or_lower(val, level):
 def getValueToRise(val, level):
     chem = chemicalDict[val]
     change = optimalValuesMax[val] - level
-    print(optimalValuesMax[val])
+    chemicals_added = []
     for item in chem:
-        calc(item, change)
+        chemicals_added.append(calc(item, change))
+    return chemicals_added
+
 
 
 def checkpHandTA(TAlevel, pHval, borate_level):
     if checkLevelOk(pH, pHval) and checkLevelOk(TA, TAlevel):
-        return True
+        return ['Success']
     elif checkLevelOk(pH, pHval) and TAlevel < 70:
         s = val_cal(22.4, (90 - TAlevel), 10)
-        print('Need to add ', s, ' oz of Baking Soda')
-        return False
+        update_cost(s, 0.12)
+        return ['Need to add ' + str(s) + ' oz of Baking Soda']
     else:
-        calc_ph(pHval, borate_level, TAlevel)
-        return False
+        return calc_ph(pHval, borate_level, TAlevel)
 
 
 # def handlepHconversion(pHval,TAval):
@@ -129,41 +137,64 @@ def calc_ph(ph_val, borate_level, ta_level):
     delta = 7.5 - ph_val
     delta *= water
     temp = (ph_val + 7.5) / 2
-    adj = ((192.1626 + -60.1221 * temp + 6.0752 * math.pow(temp, 2) + -0.1943 * math.pow(temp, 3)) * (
-    ta_level + 13.91)) / 114.6
+    adj = ((192.1626 + -60.1221 * temp + 6.0752 * math.pow(temp, 2) + -0.1943 * math.pow(temp, 3)) * (ta_level + 13.91)) / 114.6
     extra = (-5.476259 + 2.414292 * temp + -0.355882 * math.pow(temp, 2) + 0.01755 * math.pow(temp, 3)) * int(
         borate_level)
     extra *= delta
     delta *= adj
+    chemicals = []
     if ph_val < 7.2:
         # Washing soda, soda ash
-        washing_soda = (delta / 218.68) + (extra / 218.68)
-        washing_soda_vol = washing_soda * 0.8715
-        print('Washing Soda to be added by volume', round(washing_soda_vol), 'oz')
-        print('Washing Soda to be added by weight', round(washing_soda), 'oz')
+        washing_soda = round((delta / 218.68) + (extra / 218.68))
+        update_cost(washing_soda , 0.11)
+        washing_soda_vol = str(round(washing_soda * 0.8715))
+        chemicals.append('Washing Soda to be added by volume ' + washing_soda_vol + ' oz')
+        chemicals.append('Washing Soda to be added by weight ' + str(washing_soda) + ' oz')
         # Borax
-        borate_need = (delta / 110.05) + (extra / 110.05)
-        borate_need_vol = borate_need * 0.9586
-        print('Borate to be added by volume', round(borate_need_vol), 'oz')
-        print('Borate to be added by weight', round(borate_need), 'oz')
+        borate_need = round((delta / 110.05) + (extra / 110.05))
+        update_cost(borate_need, 0.11)
+        borate_need_vol = str(round(borate_need * 0.9586))
+        chemicals.append('Borate to be added by volume ' + borate_need_vol + ' oz')
+        chemicals.append('Borate to be added by weight ' + str(borate_need) + ' oz')
     if ph_val > 7.8:
         for i in range(6):
             # Muriatic acid
-            volume_of_acid = (delta / -240.15 * mamul[i]) + (extra / -240.15 * mamul[i])
-            print('Volume of', acids[i], 'muriatic acid to be added', round(volume_of_acid), 'oz')
+            volume_of_acid = round((delta / -240.15 * mamul[i]) + (extra / -240.15 * mamul[i]))
+            chemicals.append('Add ' + acids[i] + ' muriatic acid ', str(volume_of_acid), ' oz')
+            if i == 2:
+                update_cost(volume_of_acid,0.05)
 
         # Dry acid
-        weight_of_acid = (delta / -178.66) + (extra / -178.66);
+        weight_of_acid = (delta / -178.66) + (extra / -178.66)
         volume = weight_of_acid * 0.6657
-        print('Volume of dry acid by weight to be added', round(volume), 'oz')
+        update_cost(volume_of_acid,0.29)
+        chemicals.append('Volume of dry acid by weight to be added ' + str(round(volume)) + ' oz')
+    return chemicals
 
+def calc_fc(level,cyalevel):
+    if checkFC(level, cyalevel):
+        return ['Success']
+    elif level > get_ideal_fc(cyalevel):
+        return ['Drain ' + str(calc_drain_water_vol(get_ideal_fc(cyalevel), level)) + 'gallons and replace with new']
+    else:
+        chem_to_add = []
+        needed_rise = get_ideal_fc(cyalevel) - level
+        for chem in FreeChlorine:
+            s = val_cal(chem[3], needed_rise, chem[2])
+            update_cost(s, chem[1])
+            chem_to_add.append('Need to add ' + str(s) + ' oz of '+chem[0])
+        return chem_to_add
 
 # waterflow in gallons per minute, returns hours
 def water_turn_over_time(pump_flow):
     return round((water / pump_flow) / 60)
 
+def get_electricity_cost(pump_flow):
+    kwh = 2.14 * water_turn_over_time(pump_flow)
+    return 0.85 * kwh
 
 #calc_ph(6.5, 0, 100, 2)
+print(getValueToRise(CH,150))
 print(water_turn_over_time(11), 'hours')
 
 
@@ -171,4 +202,4 @@ def calc_drain_water_vol(desired_ppm, actual_ppm):
     return round(water * ((actual_ppm-desired_ppm) / actual_ppm))
 
 
-print('Drain', calc_drain_water_vol(50, 100), 'gallons and replace with new')
+# print('Drain', calc_drain_water_vol(50, 100), 'gallons and replace with new')
